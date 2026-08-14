@@ -84,8 +84,6 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
     });
   };
 
-  const sc = STATUS_COLORS[status] || STATUS_COLORS.new;
-
   return (
     <>
       {/* Backdrop */}
@@ -105,16 +103,8 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
           </div>
           <button
             onClick={onClose}
-            style={{
-              width: '32px', height: '32px',
-              borderRadius: '8px',
-              border: '1px solid #334155',
-              background: '#0f172a',
-              color: '#94a3b8',
-              cursor: 'pointer',
-              fontSize: '1.1rem',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}
+            className="lead-panel-close"
+            aria-label="Close panel"
           >
             ✕
           </button>
@@ -123,26 +113,15 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
         <div className="lead-panel-body">
           {/* Feedback messages */}
           {error && (
-            <div style={{
-              background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
-              color: '#fca5a5', padding: '0.75rem 1rem', borderRadius: '8px',
-              fontSize: '0.875rem', marginBottom: '1rem'
-            }}>{error}</div>
+            <div className="panel-alert-error">{error}</div>
           )}
           {successMsg && (
-            <div style={{
-              background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)',
-              color: '#4ade80', padding: '0.75rem 1rem', borderRadius: '8px',
-              fontSize: '0.875rem', marginBottom: '1rem'
-            }}>{successMsg}</div>
+            <div className="panel-alert-success">{successMsg}</div>
           )}
 
           {/* Lead Info */}
-          <section style={{
-            background: '#0f172a', borderRadius: '10px', border: '1px solid #334155',
-            padding: '1.25rem', marginBottom: '1.5rem'
-          }}>
-            <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '1rem' }}>
+          <section className="lead-info-section">
+            <h3 className="section-label">
               Contact Information
             </h3>
             <div className="info-grid">
@@ -155,10 +134,7 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
 
           {/* Status Changer */}
           <section style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{
-              fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em',
-              color: '#64748b', marginBottom: '0.75rem'
-            }}>
+            <h3 className="section-label-sm">
               Pipeline Status {updatingStatus && <span style={{ color: '#6366f1' }}>· Saving...</span>}
             </h3>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -170,18 +146,13 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
                     key={s}
                     onClick={() => handleStatusChange(s)}
                     disabled={updatingStatus}
+                    className="status-btn"
                     style={{
-                      flex: 1,
-                      padding: '0.6rem',
-                      borderRadius: '8px',
                       border: `1px solid ${isActive ? colors.border : '#334155'}`,
                       background: isActive ? colors.bg : 'transparent',
                       color: isActive ? colors.color : '#64748b',
                       fontWeight: isActive ? '700' : '500',
-                      fontSize: '0.8rem',
-                      textTransform: 'capitalize',
                       cursor: updatingStatus ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.15s'
                     }}
                   >
                     {s}
@@ -193,13 +164,10 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
 
           {/* Add Note */}
           <section style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{
-              fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em',
-              color: '#64748b', marginBottom: '0.75rem'
-            }}>
+            <h3 className="section-label-sm">
               Add Follow-Up Note
             </h3>
-            <form onSubmit={handleAddNote} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <form onSubmit={handleAddNote} className="note-form">
               <textarea
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
@@ -211,17 +179,10 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
               <button
                 type="submit"
                 disabled={addingNote || !noteText.trim()}
+                className="btn-add-note"
                 style={{
-                  padding: '0.625rem 1.25rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                  color: '#fff',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
                   cursor: addingNote || !noteText.trim() ? 'not-allowed' : 'pointer',
                   opacity: addingNote || !noteText.trim() ? 0.6 : 1,
-                  alignSelf: 'flex-end'
                 }}
               >
                 {addingNote ? 'Saving...' : 'Add Note'}
@@ -231,29 +192,21 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
 
           {/* Notes History */}
           <section style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{
-              fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em',
-              color: '#64748b', marginBottom: '0.75rem'
-            }}>
+            <h3 className="section-label-sm">
               Follow-Up History ({notes.length})
             </h3>
             {notes.length === 0 ? (
-              <p style={{ color: '#475569', fontSize: '0.875rem', textAlign: 'center', padding: '1.5rem 0' }}>
+              <p className="note-empty">
                 No notes yet. Add the first follow-up note above.
               </p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="notes-list">
                 {[...notes].reverse().map((note, idx) => (
-                  <div key={note._id || idx} style={{
-                    background: '#0f172a',
-                    borderRadius: '8px',
-                    border: '1px solid #334155',
-                    padding: '0.875rem 1rem'
-                  }}>
-                    <p style={{ color: '#e2e8f0', fontSize: '0.9rem', marginBottom: '0.5rem', lineHeight: '1.5' }}>
+                  <div key={note._id || idx} className="note-card">
+                    <p className="note-text">
                       {note.text}
                     </p>
-                    <p style={{ color: '#475569', fontSize: '0.75rem' }}>
+                    <p className="note-date">
                       {formatDate(note.createdAt)}
                     </p>
                   </div>
@@ -264,48 +217,27 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
 
           {/* Delete Lead */}
           <section>
-            <h3 style={{
-              fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em',
-              color: '#64748b', marginBottom: '0.75rem'
-            }}>
+            <h3 className="section-label-sm">
               Danger Zone
             </h3>
             {!confirmDelete ? (
               <button
                 onClick={() => setConfirmDelete(true)}
-                style={{
-                  width: '100%',
-                  padding: '0.625rem',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(239,68,68,0.4)',
-                  background: 'rgba(239,68,68,0.08)',
-                  color: '#f87171',
-                  fontWeight: '600',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer'
-                }}
+                className="btn-delete-lead"
               >
                 Delete This Lead
               </button>
             ) : (
-              <div style={{
-                background: 'rgba(239,68,68,0.1)',
-                border: '1px solid rgba(239,68,68,0.3)',
-                borderRadius: '8px',
-                padding: '1rem'
-              }}>
-                <p style={{ color: '#fca5a5', fontSize: '0.875rem', marginBottom: '1rem' }}>
+              <div className="delete-confirm-box">
+                <p className="delete-confirm-text">
                   Are you sure? This action cannot be undone.
                 </p>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div className="delete-actions">
                   <button
                     onClick={handleDelete}
                     disabled={deleting}
+                    className="btn-confirm-delete"
                     style={{
-                      flex: 1, padding: '0.5rem',
-                      borderRadius: '6px', border: 'none',
-                      background: '#ef4444', color: '#fff',
-                      fontWeight: '600', fontSize: '0.85rem',
                       cursor: deleting ? 'not-allowed' : 'pointer',
                       opacity: deleting ? 0.7 : 1
                     }}
@@ -315,15 +247,7 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
                   <button
                     onClick={() => setConfirmDelete(false)}
                     disabled={deleting}
-                    style={{
-                      flex: 1, padding: '0.5rem',
-                      borderRadius: '6px',
-                      border: '1px solid #334155',
-                      background: 'transparent',
-                      color: '#94a3b8',
-                      fontWeight: '600', fontSize: '0.85rem',
-                      cursor: 'pointer'
-                    }}
+                    className="btn-cancel-delete"
                   >
                     Cancel
                   </button>
@@ -340,10 +264,10 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
 function InfoField({ label, value }) {
   return (
     <div>
-      <p style={{ color: '#64748b', fontSize: '0.75rem', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+      <p className="info-field-label">
         {label}
       </p>
-      <p style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: '500' }}>
+      <p className="info-field-value">
         {value}
       </p>
     </div>

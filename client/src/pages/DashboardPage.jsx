@@ -83,7 +83,7 @@ function DashboardPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a' }}>
+    <div className="dashboard-page">
 
       {/* ── Header Navigation ── */}
       <header className="dashboard-header">
@@ -95,7 +95,7 @@ function DashboardPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: '#fff', fontWeight: 'bold', fontSize: '0.9rem'
             }}>CRM</div>
-            <h1 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <h1 className="dashboard-title">
               Mini CRM Lead Dashboard
             </h1>
           </div>
@@ -106,12 +106,7 @@ function DashboardPage() {
             </span>
             <button
               onClick={logout}
-              style={{
-                padding: '0.5rem 1rem', borderRadius: '8px',
-                border: '1px solid #ef4444', background: 'rgba(239,68,68,0.1)',
-                color: '#fca5a5', fontWeight: '600', fontSize: '0.85rem', cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
+              className="btn-signout"
             >
               Sign Out
             </button>
@@ -126,14 +121,11 @@ function DashboardPage() {
         {!loading && (
           <div className="analytics-grid">
             {ANALYTICS_CONFIG.map(({ key, label, color, borderColor }) => (
-              <div key={key} style={{
-                background: '#1e293b', border: `1px solid ${borderColor}`,
-                borderRadius: '12px', padding: '1.125rem', textAlign: 'center'
-              }}>
-                <p style={{ color: '#94a3b8', fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.5rem' }}>
+              <div key={key} className="analytics-card" style={{ border: `1px solid ${borderColor}` }}>
+                <p className="analytics-card-label">
                   {label}
                 </p>
-                <p style={{ fontSize: '1.875rem', fontWeight: '800', color, lineHeight: 1 }}>
+                <p className="analytics-card-value" style={{ color }}>
                   {analytics[key]}
                 </p>
               </div>
@@ -142,9 +134,9 @@ function DashboardPage() {
         )}
 
         {/* Section Heading */}
-        <div style={{ marginBottom: '1.25rem' }}>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: '700', color: '#f8fafc' }}>Incoming Leads</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: '0.2rem' }}>
+        <div className="section-heading">
+          <h2>Incoming Leads</h2>
+          <p>
             Click any row to view details, update status, or add notes.
           </p>
         </div>
@@ -154,10 +146,7 @@ function DashboardPage() {
           <div className="search-filter-bar">
             {/* Search Input */}
             <div className="search-input-wrapper">
-              <span style={{
-                position: 'absolute', left: '0.75rem', top: '50%',
-                transform: 'translateY(-50%)', color: '#64748b', fontSize: '1rem', pointerEvents: 'none'
-              }}>⌕</span>
+              <span className="search-icon">⌕</span>
               <input
                 type="text"
                 value={searchQuery}
@@ -169,11 +158,7 @@ function DashboardPage() {
                 <button
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear search"
-                  style={{
-                    position: 'absolute', right: '0.75rem', top: '50%',
-                    transform: 'translateY(-50%)', background: 'none',
-                    border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.85rem'
-                  }}
+                  className="btn-clear-search"
                 >✕</button>
               )}
             </div>
@@ -187,14 +172,7 @@ function DashboardPage() {
                   <button
                     key={f}
                     onClick={() => setActiveFilter(f)}
-                    style={{
-                      padding: '0.4rem 0.85rem', borderRadius: '6px', border: 'none',
-                      background: isActive ? '#6366f1' : 'transparent',
-                      color: isActive ? '#fff' : '#94a3b8',
-                      fontWeight: isActive ? '600' : '500',
-                      fontSize: '0.8rem', textTransform: 'capitalize',
-                      cursor: 'pointer', transition: 'all 0.15s'
-                    }}
+                    className={`btn-filter${isActive ? ' active' : ''}`}
                   >
                     {f} <span style={{ opacity: 0.75 }}>({count})</span>
                   </button>
@@ -206,32 +184,21 @@ function DashboardPage() {
 
         {/* Error Alert */}
         {error && (
-          <div style={{
-            background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)',
-            color: '#fca5a5', padding: '1rem', borderRadius: '10px',
-            marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            flexWrap: 'wrap', gap: '0.75rem'
-          }}>
+          <div className="error-alert">
             <span>{error}</span>
-            <button onClick={fetchLeads} style={{
-              background: '#ef4444', color: '#fff', border: 'none',
-              padding: '0.35rem 0.75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem'
-            }}>Retry</button>
+            <button onClick={fetchLeads} className="btn-retry">Retry</button>
           </div>
         )}
 
         {/* Loading Spinner */}
         {loading ? (
-          <div style={{ padding: '3rem 0', textAlign: 'center' }}>
+          <div className="loading-state">
             <div className="spinner"></div>
             <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Fetching leads from database...</p>
           </div>
         ) : filteredLeads.length === 0 ? (
           /* Empty / No Results State */
-          <div style={{
-            background: '#1e293b', border: '1px solid #334155', borderRadius: '12px',
-            padding: '3rem 2rem', textAlign: 'center', color: '#94a3b8'
-          }}>
+          <div className="empty-state">
             <p style={{ fontSize: '1.1rem', color: '#f8fafc', marginBottom: '0.5rem' }}>
               {searchQuery || activeFilter !== 'all' ? 'No matching leads found.' : 'No Leads Yet'}
             </p>
@@ -241,11 +208,7 @@ function DashboardPage() {
                 : 'Incoming contact submissions will appear here.'}
             </p>
             {(searchQuery || activeFilter !== 'all') && (
-              <button onClick={() => { setSearchQuery(''); setActiveFilter('all'); }} style={{
-                marginTop: '1rem', padding: '0.5rem 1.25rem', borderRadius: '8px',
-                border: '1px solid #334155', background: 'transparent',
-                color: '#94a3b8', cursor: 'pointer', fontSize: '0.85rem'
-              }}>Clear Filters</button>
+              <button onClick={() => { setSearchQuery(''); setActiveFilter('all'); }} className="btn-clear-filters">Clear Filters</button>
             )}
           </div>
         ) : (
@@ -287,7 +250,7 @@ function DashboardPage() {
 
         {/* Results summary */}
         {!loading && filteredLeads.length > 0 && (searchQuery || activeFilter !== 'all') && (
-          <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.75rem', textAlign: 'right' }}>
+          <p className="results-summary">
             Showing {filteredLeads.length} of {leads.length} leads
           </p>
         )}

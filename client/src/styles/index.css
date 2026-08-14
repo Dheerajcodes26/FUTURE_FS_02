@@ -9,10 +9,14 @@
   --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 body {
@@ -23,6 +27,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  line-height: 1.5;
 }
 
 #root {
@@ -89,7 +94,7 @@ select:focus-visible {
 
 .crm-table {
   width: 100%;
-  min-width: 600px; /* Prevents collapse on very narrow screens */
+  min-width: 580px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.925rem;
@@ -170,6 +175,34 @@ select:focus-visible {
   font-size: 0.875rem;
   color: #94a3b8;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.dashboard-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ── Sign Out Button ── */
+.btn-signout {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+  min-width: 44px;
 }
 
 /* ── Analytics Grid ── */
@@ -178,6 +211,44 @@ select:focus-visible {
   grid-template-columns: repeat(5, 1fr);
   gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.analytics-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.125rem;
+  text-align: center;
+}
+
+.analytics-card-label {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.5rem;
+}
+
+.analytics-card-value {
+  font-size: 1.875rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* ── Section Heading ── */
+.section-heading {
+  margin-bottom: 1.25rem;
+}
+
+.section-heading h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.section-heading p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.2rem;
 }
 
 /* ── Search & Filter Bar ── */
@@ -211,6 +282,33 @@ select:focus-visible {
   border-color: #6366f1;
 }
 
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.85rem;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .filter-tabs {
   display: flex;
   gap: 0.4rem;
@@ -219,6 +317,95 @@ select:focus-visible {
   border-radius: 8px;
   border: 1px solid #334155;
   flex-wrap: wrap;
+}
+
+.btn-filter {
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-filter.active {
+  background: #6366f1;
+  color: #fff;
+  font-weight: 600;
+}
+
+.btn-filter:not(.active) {
+  background: transparent;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ── Error Alert ── */
+.error-alert {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn-retry {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  min-height: 44px;
+}
+
+/* ── Loading State ── */
+.loading-state {
+  padding: 3rem 0;
+  text-align: center;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.btn-clear-filters {
+  margin-top: 1rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  min-height: 44px;
+}
+
+/* ── Results Summary ── */
+.results-summary {
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+  text-align: right;
 }
 
 /* ── Lead Detail Side Panel ── */
@@ -263,11 +450,219 @@ select:focus-visible {
   flex: 1;
 }
 
+.lead-panel-close {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-dark);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Panel Alerts ── */
+.panel-alert-error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.panel-alert-success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+/* ── Lead Info Section ── */
+.lead-info-section {
+  background: #0f172a;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.section-label-sm {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
 /* ── Info Grid inside panel ── */
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+.info-field-label {
+  color: #64748b;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.info-field-value {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* ── Status Buttons ── */
+.status-btn {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Note Form ── */
+.note-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btn-add-note {
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  align-self: flex-end;
+  min-height: 44px;
+}
+
+/* ── Note Card ── */
+.note-card {
+  background: #0f172a;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  padding: 0.875rem 1rem;
+}
+
+.note-empty {
+  color: #475569;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.note-text {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.note-date {
+  color: #475569;
+  font-size: 0.75rem;
+}
+
+/* ── Notes List ── */
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ── Delete Buttons ── */
+.btn-delete-lead {
+  width: 100%;
+  padding: 0.625rem;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.btn-confirm-delete {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: none;
+  background: #ef4444;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.btn-cancel-delete {
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.delete-confirm-box {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.delete-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.delete-confirm-text {
+  color: #fca5a5;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
 }
 
 /* ── Login Card ── */
@@ -291,7 +686,71 @@ select:focus-visible {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.login-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+  color: var(--text-muted);
+  font-size: 0.925rem;
+}
+
+.login-error-box {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-footer {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
 /* ── Form Elements ── */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group-last {
+  margin-bottom: 1.75rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
 .form-input {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -328,16 +787,34 @@ select:focus-visible {
   border-color: #6366f1;
 }
 
+.login-btn {
+  width: 100%;
+  padding: 0.875rem;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  min-height: 48px;
+}
+
 /* ── Responsive Breakpoints ── */
 
-/* Tablet: ≤ 1024px */
+/* Laptop: ≤ 1024px */
 @media (max-width: 1024px) {
   .analytics-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+
+  .analytics-card {
+    padding: 1rem;
+  }
 }
 
-/* Mobile Landscape / Small Tablet: ≤ 768px */
+/* Tablet: ≤ 768px */
 @media (max-width: 768px) {
   .container {
     padding: 1.25rem 1rem;
@@ -362,6 +839,18 @@ select:focus-visible {
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .analytics-card {
+    padding: 0.875rem;
+  }
+
+  .analytics-card-value {
+    font-size: 1.5rem;
+  }
+
+  .section-heading h2 {
+    font-size: 1.2rem;
+  }
+
   .search-filter-bar {
     flex-direction: column;
     align-items: stretch;
@@ -379,7 +868,7 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 
-  /* Full-width panel on mobile */
+  /* Full-width panel on tablet */
   .lead-panel {
     max-width: 100%;
     border-left: none;
@@ -390,21 +879,53 @@ select:focus-visible {
   .crm-table td {
     padding: 0.75rem 1rem;
   }
+
+  .empty-state {
+    padding: 2rem 1.5rem;
+  }
+
+  .lead-info-section {
+    padding: 1rem;
+  }
 }
 
-/* Mobile Portrait: ≤ 480px */
+/* Mobile: ≤ 480px */
 @media (max-width: 480px) {
+  .container {
+    padding: 1rem 0.75rem;
+  }
+
   .analytics-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
+  }
+
+  .analytics-card {
+    padding: 0.75rem;
+  }
+
+  .analytics-card-value {
+    font-size: 1.25rem;
+  }
+
+  .analytics-card-label {
+    font-size: 0.65rem;
+  }
+
+  .section-heading h2 {
+    font-size: 1.1rem;
   }
 
   .login-card {
     padding: 1.75rem 1.25rem;
   }
 
+  .login-title {
+    font-size: 1.5rem;
+  }
+
   .admin-label {
-    display: none; /* hide long email on very small screens, logo + signout are enough */
+    display: none;
   }
 
   .lead-panel-body {
@@ -413,5 +934,41 @@ select:focus-visible {
 
   .lead-panel-header {
     padding: 1rem;
+  }
+
+  .lead-info-section {
+    padding: 0.875rem;
+  }
+
+  .btn-signout {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .btn-filter {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    min-width: 40px;
+  }
+
+  .filter-tabs {
+    gap: 0.25rem;
+  }
+
+  .error-alert {
+    padding: 0.75rem;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .delete-actions {
+    flex-direction: column;
+  }
+
+  .status-btn {
+    padding: 0.5rem;
+    font-size: 0.75rem;
   }
 }
