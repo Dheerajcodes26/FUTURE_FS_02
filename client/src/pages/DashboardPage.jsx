@@ -1,53 +1,45 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import LeadDetailPanel from '../components/LeadDetailPanel';
 
-const FILTER_OPTIONS = ['all', 'new', 'contacted', 'converted'];
-
-const ANALYTICS_CONFIG = [
-  { key: 'total',     label: 'Total Leads',    color: '#38bdf8', borderColor: 'rgba(56,189,248,0.3)' },
-  { key: 'new',       label: 'New',            color: '#60a5fa', borderColor: 'rgba(96,165,250,0.3)' },
-  { key: 'contacted', label: 'Contacted',       color: '#fbbf24', borderColor: 'rgba(251,191,36,0.3)' },
-  { key: 'converted', label: 'Converted',       color: '#4ade80', borderColor: 'rgba(74,222,128,0.3)' },
-  { key: 'rate',      label: 'Conversion Rate', color: '#a78bfa', borderColor: 'rgba(167,139,250,0.3)' },
+const AVATAR_COLORS = [
+  'linear-gradient(135deg, #0ea5e9, #06b6d4)',
+  'linear-gradient(135deg, #6366f1, #8b5cf6)',
+  'linear-gradient(135deg, #f59e0b, #f97316)',
+  'linear-gradient(135deg, #22c55e, #10b981)',
+  'linear-gradient(135deg, #ec4899, #f43f5e)',
 ];
 
-function DashboardPage() {
-  const { admin, logout } = useAuth();
+const SOURCE_COLORS = {
+  Website: '#0ea5e9', LinkedIn: '#0284c7', Facebook: '#3b82f6',
+  Instagram: '#8b5cf6', Referral: '#22c55e', 'Google Ads': '#f59e0b', Other: '#94a3b8',
+};
+
+function getAvatarColor(name) {
+  let hash = 0;
+  for (let i = 0; i < (name || '').length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitials(name) {
+  if (!name) return '??';
+  return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+}
+
+function DashboardPage({ onNavigate, onSelectLead }) {
+  const { admin } = useAuth();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedLead, setSelectedLead] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
 
-  const fetchLeads = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axios.get('/api/leads');
-      if (response.data.success) {
-        setLeads(response.data.data || []);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load leads. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchLeads(); }, []);
-
-  const handleLeadUpdate = (updatedLead) => {
-    setLeads((prev) => prev.map((l) => (l._id === updatedLead._id ? updatedLead : l)));
-    setSelectedLead(updatedLead);
-  };
-
-  const handleLeadDelete = (deletedId) => {
-    setLeads((prev) => prev.filter((l) => l._id !== deletedId));
-    setSelectedLead(null);
-  };
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const res = await axios.get('/api/leads');
+        if (res.data.success) setLeads(res.data.data || []);
+      } catch {} finally { setLoading(false); }
+    };
+    fetchLeads();
+  }, []);
 
   const analytics = useMemo(() => {
     const total = leads.length;
@@ -55,216 +47,122 @@ function DashboardPage() {
     const contacted = leads.filter(l => l.status === 'contacted').length;
     const converted = leads.filter(l => l.status === 'converted').length;
     const rate = total > 0 ? ((converted / total) * 100).toFixed(1) : '0.0';
-    return { total, new: newCount, contacted, converted, rate: `${rate}%` };
+    const sourceCounts = {};
+    leads.forEach(l => { const s = l.source || 'Website'; sourceCounts[s] = (sourceCounts[s] || 0) + 1; });
+    return { total, new: newCount, contacted, converted, rate: rate + '%', sourceCounts };
   }, [leads]);
 
-  const filteredLeads = useMemo(() => {
-    let result = leads;
-    if (activeFilter !== 'all') result = result.filter(l => l.status === activeFilter);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(l =>
-        l.name?.toLowerCase().includes(q) || l.email?.toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [leads, activeFilter, searchQuery]);
+  const recentLeads = useMemo(() => leads.slice(0, 6), [leads]);
+  const maxSource = Math.max(...Object.values(analytics.sourceCounts), 1);
 
-  const formatDate = (isoString) => {
-    if (!isoString) return 'N/A';
-    return new Date(isoString).toLocaleDateString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric'
-    });
-  };
-
-  const getStatusBadge = (status) => {
-    const s = (status || 'new').toLowerCase();
-    return <span className={`badge badge-${s}`}>{s}</span>;
-  };
+  const metrics = [
+    { label: 'Total Leads', value: analytics.total, icon: '\u{1F4CA}', color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)' },
+    { label: 'New', value: analytics.new, icon: '\u{1F195}', color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)' },
+    { label: 'Contacted', value: analytics.contacted, icon: '\u{1F4DE}', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+    { label: 'Converted', value: analytics.converted, icon: '\u2705', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
+    { label: 'Conversion Rate', value: analytics.rate, icon: '\u{1F4C8}', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+  ];
 
   return (
-    <div className="dashboard-page">
-
-      {/* ── Header Navigation ── */}
-      <header className="dashboard-header">
-        <div className="dashboard-header-inner">
-          <div className="dashboard-header-brand">
-            <div style={{
-              width: '36px', height: '36px', borderRadius: '8px', flexShrink: 0,
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontWeight: 'bold', fontSize: '0.9rem'
-            }}>CRM</div>
-            <h1 className="dashboard-title">
-              Mini CRM Lead Dashboard
-            </h1>
+    <div>
+      <div className="page-header">
+        <h1>Dashboard</h1>
+        <p>Welcome back, {admin?.email || 'Admin'}. Here is your CRM overview.</p>
+      </div>
+      <div className="analytics-grid">
+        {metrics.map((m) => (
+          <div className="analytics-card" key={m.label}>
+            <div className="analytics-card-icon" style={{ background: m.bg, color: m.color }}>{m.icon}</div>
+            <div className="analytics-card-label">{m.label}</div>
+            <div className="analytics-card-value" style={{ color: m.color }}>{m.value}</div>
           </div>
-
-          <div className="dashboard-header-actions">
-            <span className="admin-label">
-              Admin: <strong style={{ color: '#f8fafc' }}>{admin?.email}</strong>
-            </span>
-            <button
-              onClick={logout}
-              className="btn-signout"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Main Content ── */}
-      <div className="container">
-
-        {/* Analytics Cards */}
-        {!loading && (
-          <div className="analytics-grid">
-            {ANALYTICS_CONFIG.map(({ key, label, color, borderColor }) => (
-              <div key={key} className="analytics-card" style={{ border: `1px solid ${borderColor}` }}>
-                <p className="analytics-card-label">
-                  {label}
-                </p>
-                <p className="analytics-card-value" style={{ color }}>
-                  {analytics[key]}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Section Heading */}
-        <div className="section-heading">
-          <h2>Incoming Leads</h2>
-          <p>
-            Click any row to view details, update status, or add notes.
-          </p>
-        </div>
-
-        {/* Search & Filter Bar */}
-        {!loading && (
-          <div className="search-filter-bar">
-            {/* Search Input */}
-            <div className="search-input-wrapper">
-              <span className="search-icon">⌕</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or email..."
-                className="search-input"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  aria-label="Clear search"
-                  className="btn-clear-search"
-                >✕</button>
+        ))}
+      </div>
+      <div className="dashboard-composition">
+        <div className="dashboard-main">
+          <div className="dash-card">
+            <div className="dash-card-header">
+              <span className="dash-card-title">Recent Leads</span>
+              <button className="btn btn-sm btn-ghost" onClick={() => onNavigate('leads')}>View All</button>
+            </div>
+            <div className="dash-card-body">
+              {loading ? (
+                <div style={{ padding: '1rem 0', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.85rem' }}>Loading...</div>
+              ) : recentLeads.length === 0 ? (
+                <div style={{ padding: '1.5rem 0', textAlign: 'center', color: 'var(--text-light)', fontSize: '0.85rem' }}>No leads yet</div>
+              ) : (
+                recentLeads.map((lead) => (
+                  <div className="recent-lead-item" key={lead._id} onClick={() => onSelectLead(lead)}>
+                    <div className="avatar avatar-sm" style={{ background: getAvatarColor(lead.name) }}>{getInitials(lead.name)}</div>
+                    <div className="recent-lead-info">
+                      <div className="recent-lead-name">{lead.name}</div>
+                      <div className="recent-lead-email">{lead.email}</div>
+                    </div>
+                    <span className={'badge badge-' + lead.status}>{lead.status}</span>
+                  </div>
+                ))
               )}
             </div>
-
-            {/* Filter Tabs */}
-            <div className="filter-tabs">
-              {FILTER_OPTIONS.map((f) => {
-                const isActive = activeFilter === f;
-                const count = f === 'all' ? leads.length : leads.filter(l => l.status === f).length;
-                return (
-                  <button
-                    key={f}
-                    onClick={() => setActiveFilter(f)}
-                    className={`btn-filter${isActive ? ' active' : ''}`}
-                  >
-                    {f} <span style={{ opacity: 0.75 }}>({count})</span>
-                  </button>
-                );
-              })}
+          </div>
+          <div className="dash-card">
+            <div className="dash-card-header"><span className="dash-card-title">Quick Actions</span></div>
+            <div className="dash-card-body">
+              <div className="quick-actions">
+                <button className="quick-action-btn" onClick={() => onNavigate('add-lead')}>
+                  <span className="quick-action-icon">+</span>Add New Lead
+                </button>
+                <button className="quick-action-btn" onClick={() => onNavigate('leads')}>
+                  <span className="quick-action-icon">@</span>View All Leads
+                </button>
+                <button className="quick-action-btn" onClick={() => onNavigate('analytics')}>
+                  <span className="quick-action-icon">%</span>View Analytics
+                </button>
+              </div>
             </div>
           </div>
-        )}
-
-        {/* Error Alert */}
-        {error && (
-          <div className="error-alert">
-            <span>{error}</span>
-            <button onClick={fetchLeads} className="btn-retry">Retry</button>
+        </div>
+        <div className="dashboard-sidebar-right">
+          <div className="dash-card">
+            <div className="dash-card-header"><span className="dash-card-title">Lead Sources</span></div>
+            <div className="dash-card-body">
+              {Object.keys(analytics.sourceCounts).length === 0 ? (
+                <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', textAlign: 'center', padding: '1rem 0' }}>No data yet</p>
+              ) : (
+                Object.entries(analytics.sourceCounts).sort((a, b) => b[1] - a[1]).map(([source, count]) => (
+                  <div className="source-bar" key={source}>
+                    <span className="source-bar-label">{source}</span>
+                    <div className="source-bar-track">
+                      <div className="source-bar-fill" style={{ width: (count / maxSource) * 100 + '%', background: SOURCE_COLORS[source] || '#94a3b8' }} />
+                    </div>
+                    <span className="source-bar-count">{count}</span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        )}
-
-        {/* Loading Spinner */}
-        {loading ? (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Fetching leads from database...</p>
-          </div>
-        ) : filteredLeads.length === 0 ? (
-          /* Empty / No Results State */
-          <div className="empty-state">
-            <p style={{ fontSize: '1.1rem', color: '#f8fafc', marginBottom: '0.5rem' }}>
-              {searchQuery || activeFilter !== 'all' ? 'No matching leads found.' : 'No Leads Yet'}
-            </p>
-            <p style={{ fontSize: '0.875rem' }}>
-              {searchQuery || activeFilter !== 'all'
-                ? 'Try adjusting your search or filter.'
-                : 'Incoming contact submissions will appear here.'}
-            </p>
-            {(searchQuery || activeFilter !== 'all') && (
-              <button onClick={() => { setSearchQuery(''); setActiveFilter('all'); }} className="btn-clear-filters">Clear Filters</button>
-            )}
-          </div>
-        ) : (
-          /* Lead Table */
-          <div className="table-wrapper">
-            <table className="crm-table">
-              <thead>
-                <tr>
-                  <th>Lead Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Source</th>
-                  <th>Status</th>
-                  <th>Notes</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredLeads.map((lead) => (
-                  <tr
-                    key={lead._id}
-                    onClick={() => setSelectedLead(lead)}
-                    style={{ cursor: 'pointer' }}
-                    title="Click to view details"
-                  >
-                    <td style={{ fontWeight: '600', color: '#f8fafc' }}>{lead.name}</td>
-                    <td style={{ color: '#cbd5e1' }}>{lead.email}</td>
-                    <td style={{ color: '#94a3b8' }}>{lead.phone || 'N/A'}</td>
-                    <td style={{ color: '#cbd5e1' }}>{lead.source || 'Website'}</td>
-                    <td>{getStatusBadge(lead.status)}</td>
-                    <td style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{lead.notes?.length || 0}</td>
-                    <td style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{formatDate(lead.createdAt)}</td>
-                  </tr>
+          <div className="dash-card">
+            <div className="dash-card-header"><span className="dash-card-title">Pipeline Summary</span></div>
+            <div className="dash-card-body">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {[{ label: 'New Leads', value: analytics.new, color: '#0ea5e9' },
+                  { label: 'Contacted', value: analytics.contacted, color: '#f59e0b' },
+                  { label: 'Converted', value: analytics.converted, color: '#22c55e' }
+                ].map(({ label, value, color }) => (
+                  <div key={label}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{label}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '700', color }}>{value}</span>
+                    </div>
+                    <div className="source-bar-track">
+                      <div className="source-bar-fill" style={{ width: analytics.total > 0 ? (value / analytics.total) * 100 + '%' : '0%', background: color }} />
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
-        )}
-
-        {/* Results summary */}
-        {!loading && filteredLeads.length > 0 && (searchQuery || activeFilter !== 'all') && (
-          <p className="results-summary">
-            Showing {filteredLeads.length} of {leads.length} leads
-          </p>
-        )}
+        </div>
       </div>
-
-      {/* Lead Detail Side Panel */}
-      {selectedLead && (
-        <LeadDetailPanel
-          lead={selectedLead}
-          onClose={() => setSelectedLead(null)}
-          onUpdate={handleLeadUpdate}
-          onDelete={handleLeadDelete}
-        />
-      )}
     </div>
   );
 }

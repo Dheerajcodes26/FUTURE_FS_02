@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
-function LoginPage({ onSwitchView }) {
-  const { login, error, setError } = useAuth();
+function SignupPage({ onSwitchView }) {
+  const { setError } = useAuth();
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [validationError, setValidationError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+
   const [leadName, setLeadName] = useState('');
   const [leadEmail, setLeadEmail] = useState('');
   const [leadPhone, setLeadPhone] = useState('');
@@ -18,28 +21,44 @@ function LoginPage({ onSwitchView }) {
   const [leadSubmitting, setLeadSubmitting] = useState(false);
   const [leadSuccess, setLeadSuccess] = useState('');
   const [leadError, setLeadError] = useState('');
-  const [activeTab, setActiveTab] = useState('signin');
-  const [stats, setStats] = useState({ totalLeads: 0, convertedLeads: 0, conversionRate: 0 });
+  const [activeTab, setActiveTab] = useState('signup');
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await axios.get('/api/stats');
-        if (res.data.success) setStats(res.data.data);
-      } catch {}
-    };
-    fetchStats();
-  }, []);
-
-  const handleSignIn = async (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
     setValidationError('');
+    setSuccessMsg('');
     setError(null);
+
+    if (!fullName.trim()) { setValidationError('Please enter your full name.'); return; }
     if (!email.trim()) { setValidationError('Please enter your email address.'); return; }
-    if (!password) { setValidationError('Please enter your password.'); return; }
+    if (!password) { setValidationError('Please create a password.'); return; }
+    if (password.length < 6) { setValidationError('Password must be at least 6 characters.'); return; }
+    if (password !== confirmPassword) { setValidationError('Passwords do not match.'); return; }
+
     setSubmitting(true);
-    await login(email, password);
-    setSubmitting(false);
+    try {
+      await axios.post('/api/auth/register', {
+        name: fullName.trim(),
+        email: email.trim(),
+        password
+      });
+      setSuccessMsg('Account created successfully! You can now sign in.');
+      setFullName(''); setEmail(''); setPassword(''); setConfirmPassword('');
+    } catch (err) {
+      let msg;
+      if (!err.response) {
+        msg = 'Unable to reach the server. Check that the backend is running.';
+      } else if (err.response.status === 409) {
+        msg = 'An account with this email already exists. Please sign in instead.';
+      } else if (err.response.status === 400) {
+        msg = err.response.data?.message || 'Please check your input.';
+      } else {
+        msg = err.response.data?.message || 'Registration failed. Please try again.';
+      }
+      setValidationError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSubmitLead = async (e) => {
@@ -83,31 +102,17 @@ function LoginPage({ onSwitchView }) {
             <li><span className="login-brand-feature-icon">📝</span>Follow-Up Notes</li>
             <li><span className="login-brand-feature-icon">📊</span>Analytics Dashboard</li>
           </ul>
-          <div className="login-brand-stats">
-            <div className="login-brand-stat">
-              <span className="login-brand-stat-value">{stats.totalLeads}+</span>
-              <span className="login-brand-stat-label">Leads Managed</span>
-            </div>
-            <div className="login-brand-stat">
-              <span className="login-brand-stat-value">{stats.convertedLeads}+</span>
-              <span className="login-brand-stat-label">Converted</span>
-            </div>
-            <div className="login-brand-stat">
-              <span className="login-brand-stat-value">{stats.conversionRate}%</span>
-              <span className="login-brand-stat-label">Conversion Rate</span>
-            </div>
-          </div>
         </div>
       </div>
 
       <div className="login-content">
         <div className="login-content-inner">
           <h2 className="login-content-title">Welcome to LeadPulse</h2>
-          <p className="login-content-subtitle">Sign in to your account or submit a lead</p>
+          <p className="login-content-subtitle">Create an account or submit a lead</p>
 
           <div className="login-tabs">
-            <button className={'login-tab ' + (activeTab === 'signin' ? 'active' : '')} onClick={() => setActiveTab('signin')} type="button">
-              Sign In
+            <button className={'login-tab ' + (activeTab === 'signup' ? 'active' : '')} onClick={() => setActiveTab('signup')} type="button">
+              Create Account
             </button>
             <button className={'login-tab ' + (activeTab === 'lead' ? 'active' : '')} onClick={() => setActiveTab('lead')} type="button">
               Submit a Lead
@@ -115,44 +120,54 @@ function LoginPage({ onSwitchView }) {
           </div>
 
           <div className="login-cards-row">
-            <div className={'login-card ' + (activeTab === 'signin' ? 'active' : '')}>
+            <div className={'login-card ' + (activeTab === 'signup' ? 'active' : '')}>
               <div className="login-card-header">
-                <h3 className="login-card-title">Welcome Back</h3>
-                <p className="login-card-subtitle">Sign in to your account</p>
+                <h3 className="login-card-title">Create Account</h3>
+                <p className="login-card-subtitle">Start your free trial today</p>
               </div>
-              {validationError && <div className="login-error-box">{validationError}</div>}
-              {error && !validationError && <div className="login-error-box">{error}</div>}
-              <form onSubmit={handleSignIn}>
+              {(validationError || successMsg) && (
+                <div className={successMsg ? 'login-success-box' : 'login-error-box'}>
+                  {successMsg || validationError}
+                </div>
+              )}
+              <form onSubmit={handleSignUp}>
+                <div className="input-group">
+                  <label className="input-label">Full Name</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">👤</span>
+                    <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="John Doe" disabled={submitting} className="input input-with-icon" />
+                  </div>
+                </div>
                 <div className="input-group">
                   <label className="input-label">Email Address</label>
                   <div className="input-wrapper">
                     <span className="input-icon">✉</span>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="admin@crm.com" disabled={submitting} className="input input-with-icon" />
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" disabled={submitting} className="input input-with-icon" />
                   </div>
                 </div>
                 <div className="input-group">
                   <label className="input-label">Password</label>
                   <div className="input-wrapper">
                     <span className="input-icon">🔒</span>
-                    <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" disabled={submitting} className="input input-with-icon" />
+                    <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min. 6 characters" disabled={submitting} className="input input-with-icon" />
                     <button type="button" className="form-input-toggle" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
                       {showPassword ? '🙈' : '👁'}
                     </button>
                   </div>
                 </div>
-                <div className="login-form-options">
-                  <label className="login-remember">
-                    <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
-                    Remember me
-                  </label>
-                  <a href="#" className="login-forgot">Forgot Password?</a>
+                <div className="input-group">
+                  <label className="input-label">Confirm Password</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon">🔒</span>
+                    <input type={showPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password" disabled={submitting} className="input input-with-icon" />
+                  </div>
                 </div>
                 <button type="submit" disabled={submitting} className="login-btn btn-signin">
-                  {submitting ? 'Authenticating...' : 'Sign In'}
+                  {submitting ? 'Creating Account...' : 'Create Account'}
                 </button>
               </form>
               <div className="login-card-footer">
-                <p>Don't have an account? <button type="button" className="login-link-btn" onClick={() => onSwitchView && onSwitchView('signup')}>Create Account</button></p>
+                <p>Already have an account? <button type="button" className="login-link-btn" onClick={() => onSwitchView && onSwitchView('login')}>Sign In</button></p>
               </div>
             </div>
 
@@ -210,4 +225,4 @@ function LoginPage({ onSwitchView }) {
   );
 }
 
-export default LoginPage;
+export default SignupPage;

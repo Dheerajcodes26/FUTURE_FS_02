@@ -21,7 +21,7 @@ export const protect = async (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Not authorized, admin account not found' });
       }
 
-      next();
+      return next();
     } catch (error) {
       return res.status(401).json({ success: false, message: 'Not authorized, token invalid or expired' });
     }

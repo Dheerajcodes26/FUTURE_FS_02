@@ -38,7 +38,7 @@ export const loginAdmin = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error during login', error: error.message });
+    return res.status(500).json({ success: false, message: 'Server error during login' });
   }
 };
 
@@ -50,7 +50,50 @@ export const getMe = async (req, res) => {
     const admin = await Admin.findById(req.admin._id).select('-passwordHash');
     return res.status(200).json({ success: true, data: admin });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error fetching profile', error: error.message });
+    return res.status(500).json({ success: false, message: 'Server error fetching profile' });
+  }
+};
+
+// @desc    Register a new admin account
+// @route   POST /api/auth/register
+// @access  Public
+export const registerAdmin = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide email and password' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    // Check for existing admin with same email
+    const existingAdmin = await Admin.findOne({ email: email.toLowerCase().trim() });
+    if (existingAdmin) {
+      return res.status(409).json({ success: false, message: 'An account with this email already exists' });
+    }
+
+    const passwordHash = await Admin.hashPassword(password);
+
+    const admin = await Admin.create({
+      name: name ? name.trim() : '',
+      email: email.toLowerCase().trim(),
+      passwordHash
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Account created successfully',
+      data: {
+        _id: admin._id,
+        email: admin.email,
+        name: admin.name
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Server error during registration' });
   }
 };
 

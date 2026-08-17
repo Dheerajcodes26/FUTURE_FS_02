@@ -4,6 +4,8 @@ import Lead from '../models/Lead.js';
 // @desc    Create a new lead
 // @route   POST /api/leads
 // @access  Public (or Admin protected in later tasks)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const createLead = async (req, res) => {
   try {
     const { name, email, phone, source, status, notes } = req.body;
@@ -13,6 +15,36 @@ export const createLead = async (req, res) => {
     }
     if (!email || !email.trim()) {
       return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    // Validate email format
+    if (!EMAIL_REGEX.test(email.trim())) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+    }
+
+    // Validate field lengths
+    if (name.trim().length > 200) {
+      return res.status(400).json({ success: false, message: 'Name must be 200 characters or less' });
+    }
+    if (email.trim().length > 254) {
+      return res.status(400).json({ success: false, message: 'Email must be 254 characters or less' });
+    }
+    if (phone && phone.trim().length > 30) {
+      return res.status(400).json({ success: false, message: 'Phone must be 30 characters or less' });
+    }
+    if (source && source.trim().length > 100) {
+      return res.status(400).json({ success: false, message: 'Source must be 100 characters or less' });
+    }
+
+    // Validate note length if provided
+    if (notes) {
+      const noteTexts = typeof notes === 'string' ? [notes] : (Array.isArray(notes) ? notes : []);
+      for (const n of noteTexts) {
+        const txt = typeof n === 'string' ? n : n.text;
+        if (txt && txt.trim().length > 2000) {
+          return res.status(400).json({ success: false, message: 'Each note must be 2000 characters or less' });
+        }
+      }
     }
 
     const leadData = {
@@ -40,7 +72,7 @@ export const createLead = async (req, res) => {
       const messages = Object.values(error.errors).map(val => val.message);
       return res.status(400).json({ success: false, message: messages.join(', ') });
     }
-    return res.status(500).json({ success: false, message: 'Server error creating lead', error: error.message });
+    return res.status(500).json({ success: false, message: 'Server error creating lead' });
   }
 };
 
@@ -52,7 +84,7 @@ export const getLeads = async (req, res) => {
     const leads = await Lead.find().sort({ createdAt: -1 });
     return res.status(200).json({ success: true, count: leads.length, data: leads });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error fetching leads', error: error.message });
+    return res.status(500).json({ success: false, message: 'Server error fetching leads' });
   }
 };
 
@@ -75,7 +107,7 @@ export const getLeadById = async (req, res) => {
 
     return res.status(200).json({ success: true, data: lead });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error fetching lead', error: error.message });
+    return res.status(500).json({ success: false, message: 'Server error fetching lead' });
   }
 };
 
@@ -98,10 +130,42 @@ export const updateLead = async (req, res) => {
 
     const { name, email, phone, source, status } = req.body;
 
-    if (name !== undefined) lead.name = name.trim();
-    if (email !== undefined) lead.email = email.trim().toLowerCase();
-    if (phone !== undefined) lead.phone = phone.trim();
-    if (source !== undefined) lead.source = source.trim();
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return res.status(400).json({ success: false, message: 'Name cannot be empty' });
+      }
+      if (name.trim().length > 200) {
+        return res.status(400).json({ success: false, message: 'Name must be 200 characters or less' });
+      }
+      lead.name = name.trim();
+    }
+    if (email !== undefined) {
+      if (!email.trim()) {
+        return res.status(400).json({ success: false, message: 'Email cannot be empty' });
+      }
+      if (!EMAIL_REGEX.test(email.trim())) {
+        return res.status(400).json({ success: false, message: 'Please provide a valid email address' });
+      }
+      if (email.trim().length > 254) {
+        return res.status(400).json({ success: false, message: 'Email must be 254 characters or less' });
+      }
+      lead.email = email.trim().toLowerCase();
+    }
+    if (phone !== undefined) {
+      if (phone.trim().length > 30) {
+        return res.status(400).json({ success: false, message: 'Phone must be 30 characters or less' });
+      }
+      lead.phone = phone.trim();
+    }
+    if (source !== undefined) {
+      if (!source.trim()) {
+        return res.status(400).json({ success: false, message: 'Source cannot be empty' });
+      }
+      if (source.trim().length > 100) {
+        return res.status(400).json({ success: false, message: 'Source must be 100 characters or less' });
+      }
+      lead.source = source.trim();
+    }
     if (status !== undefined) {
       if (!['new', 'contacted', 'converted'].includes(status.toLowerCase())) {
         return res.status(400).json({ success: false, message: 'Status must be new, contacted, or converted' });
@@ -116,7 +180,7 @@ export const updateLead = async (req, res) => {
       const messages = Object.values(error.errors).map(val => val.message);
       return res.status(400).json({ success: false, message: messages.join(', ') });
     }
-    return res.status(500).json({ success: false, message: 'Server error updating lead', error: error.message });
+    return res.status(500).json({ success: false, message: 'Server error updating lead' });
   }
 };
 
@@ -140,7 +204,7 @@ export const deleteLead = async (req, res) => {
     await lead.deleteOne();
     return res.status(200).json({ success: true, message: 'Lead deleted successfully' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error deleting lead', error: error.message });
+    return res.status(500).json({ success: false, message: 'Server error deleting lead' });
   }
 };
 
@@ -160,6 +224,10 @@ export const addLeadNote = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Note text is required' });
     }
 
+    if (text.trim().length > 2000) {
+      return res.status(400).json({ success: false, message: 'Note must be 2000 characters or less' });
+    }
+
     const lead = await Lead.findById(id);
 
     if (!lead) {
@@ -171,6 +239,6 @@ export const addLeadNote = async (req, res) => {
 
     return res.status(200).json({ success: true, data: lead });
   } catch (error) {
-    return res.status(500).json({ success: false, message: 'Server error adding note', error: error.message });
+    return res.status(500).json({ success: false, message: 'Server error adding note' });
   }
 };

@@ -3,6 +3,11 @@ import bcrypt from 'bcryptjs';
 
 const adminSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      trim: true,
+      default: ''
+    },
     email: {
       type: String,
       required: [true, 'Admin email is required'],

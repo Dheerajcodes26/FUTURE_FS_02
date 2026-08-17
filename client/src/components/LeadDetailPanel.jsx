@@ -3,12 +3,6 @@ import axios from 'axios';
 
 const STATUS_OPTIONS = ['new', 'contacted', 'converted'];
 
-const STATUS_COLORS = {
-  new: { bg: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: 'rgba(59,130,246,0.3)' },
-  contacted: { bg: 'rgba(245,158,11,0.15)', color: '#fbbf24', border: 'rgba(245,158,11,0.3)' },
-  converted: { bg: 'rgba(34,197,94,0.15)', color: '#4ade80', border: 'rgba(34,197,94,0.3)' },
-};
-
 function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
   const [status, setStatus] = useState(lead.status || 'new');
   const [noteText, setNoteText] = useState('');
@@ -20,27 +14,17 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  const showSuccess = (msg) => {
-    setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(null), 3000);
-  };
+  const showSuccess = (msg) => { setSuccessMsg(msg); setTimeout(() => setSuccessMsg(null), 3000); };
 
   const handleStatusChange = async (newStatus) => {
     if (newStatus === status) return;
     setUpdatingStatus(true);
     setError(null);
     try {
-      const res = await axios.put(`/api/leads/${lead._id}`, { status: newStatus });
-      if (res.data.success) {
-        setStatus(res.data.data.status);
-        onUpdate(res.data.data);
-        showSuccess('Status updated successfully.');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update status.');
-    } finally {
-      setUpdatingStatus(false);
-    }
+      const res = await axios.put('/api/leads/' + lead._id, { status: newStatus });
+      if (res.data.success) { setStatus(res.data.data.status); onUpdate(res.data.data); showSuccess('Status updated.'); }
+    } catch (err) { setError(err.response?.data?.message || 'Failed to update status.'); }
+    finally { setUpdatingStatus(false); }
   };
 
   const handleAddNote = async (e) => {
@@ -49,208 +33,112 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
     setAddingNote(true);
     setError(null);
     try {
-      const res = await axios.post(`/api/leads/${lead._id}/notes`, { text: noteText.trim() });
-      if (res.data.success) {
-        setNotes(res.data.data.notes || []);
-        setNoteText('');
-        onUpdate(res.data.data);
-        showSuccess('Note added successfully.');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add note.');
-    } finally {
-      setAddingNote(false);
-    }
+      const res = await axios.post('/api/leads/' + lead._id + '/notes', { text: noteText.trim() });
+      if (res.data.success) { setNotes(res.data.data.notes || []); setNoteText(''); onUpdate(res.data.data); showSuccess('Note added.'); }
+    } catch (err) { setError(err.response?.data?.message || 'Failed to add note.'); }
+    finally { setAddingNote(false); }
   };
 
   const handleDelete = async () => {
     setDeleting(true);
     setError(null);
     try {
-      await axios.delete(`/api/leads/${lead._id}`);
+      await axios.delete('/api/leads/' + lead._id);
       onDelete(lead._id);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to delete lead.');
-      setDeleting(false);
-      setConfirmDelete(false);
-    }
+    } catch (err) { setError(err.response?.data?.message || 'Failed to delete lead.'); setDeleting(false); setConfirmDelete(false); }
   };
 
   const formatDate = (iso) => {
     if (!iso) return 'N/A';
-    return new Date(iso).toLocaleString('en-US', {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
+    return new Date(iso).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getInitials = (name) => {
+    if (!name) return '??';
+    return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
   };
 
   return (
     <>
-      {/* Backdrop */}
-      <div onClick={onClose} className="lead-panel-backdrop" />
-
-      {/* Side Panel */}
-      <div className="lead-panel">
-        {/* Panel Header */}
-        <div className="lead-panel-header">
-          <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>
-              {lead.name}
-            </h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              Lead Details & Follow-Up
-            </p>
+      <div onClick={onClose} className="drawer-backdrop" />
+      <div className="drawer">
+        <div className="drawer-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="avatar" style={{ background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)' }}>{getInitials(lead.name)}</div>
+            <div>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)' }}>{lead.name}</h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Lead Details & Follow-Up</p>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="lead-panel-close"
-            aria-label="Close panel"
-          >
-            ✕
-          </button>
+          <button onClick={onClose} className="drawer-close" aria-label="Close panel">✕</button>
         </div>
 
-        <div className="lead-panel-body">
-          {/* Feedback messages */}
-          {error && (
-            <div className="panel-alert-error">{error}</div>
-          )}
-          {successMsg && (
-            <div className="panel-alert-success">{successMsg}</div>
-          )}
+        <div className="drawer-body">
+          {error && <div className="alert alert-error">{error}</div>}
+          {successMsg && <div className="alert alert-success">{successMsg}</div>}
 
-          {/* Lead Info */}
-          <section className="lead-info-section">
-            <h3 className="section-label">
-              Contact Information
-            </h3>
-            <div className="info-grid">
-              <InfoField label="Email" value={lead.email} />
-              <InfoField label="Phone" value={lead.phone || 'Not provided'} />
-              <InfoField label="Source" value={lead.source || 'Website'} />
-              <InfoField label="Created" value={formatDate(lead.createdAt)} />
+          <section className="drawer-section">
+            <h3 className="drawer-section-title">Contact Information</h3>
+            <div className="drawer-info-grid">
+              <div className="drawer-info-item"><label>Email</label><span>{lead.email}</span></div>
+              <div className="drawer-info-item"><label>Phone</label><span>{lead.phone || 'Not provided'}</span></div>
+              <div className="drawer-info-item"><label>Source</label><span>{lead.source || 'Website'}</span></div>
+              <div className="drawer-info-item"><label>Created</label><span>{formatDate(lead.createdAt)}</span></div>
+              {lead.updatedAt && <div className="drawer-info-item"><label>Updated</label><span>{formatDate(lead.updatedAt)}</span></div>}
             </div>
           </section>
 
-          {/* Status Changer */}
-          <section style={{ marginBottom: '1.5rem' }}>
-            <h3 className="section-label-sm">
-              Pipeline Status {updatingStatus && <span style={{ color: '#6366f1' }}>· Saving...</span>}
-            </h3>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {STATUS_OPTIONS.map((s) => {
-                const colors = STATUS_COLORS[s];
-                const isActive = status === s;
-                return (
-                  <button
-                    key={s}
-                    onClick={() => handleStatusChange(s)}
-                    disabled={updatingStatus}
-                    className="status-btn"
-                    style={{
-                      border: `1px solid ${isActive ? colors.border : '#334155'}`,
-                      background: isActive ? colors.bg : 'transparent',
-                      color: isActive ? colors.color : '#64748b',
-                      fontWeight: isActive ? '700' : '500',
-                      cursor: updatingStatus ? 'not-allowed' : 'pointer',
-                    }}
-                  >
-                    {s}
-                  </button>
-                );
-              })}
+          <section className="drawer-section">
+            <h3 className="drawer-section-title">Pipeline Status {updatingStatus && <span style={{ color: 'var(--sky-500)' }}>· Saving...</span>}</h3>
+            <div className="status-options">
+              {STATUS_OPTIONS.map((s) => (
+                <button key={s} onClick={() => handleStatusChange(s)} disabled={updatingStatus}
+                  className={'status-option ' + (status === s ? 'active' : '')} data-status={s} type="button">
+                  {s}
+                </button>
+              ))}
             </div>
           </section>
 
-          {/* Add Note */}
-          <section style={{ marginBottom: '1.5rem' }}>
-            <h3 className="section-label-sm">
-              Add Follow-Up Note
-            </h3>
-            <form onSubmit={handleAddNote} className="note-form">
-              <textarea
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                placeholder="Write a follow-up note here..."
-                rows={3}
-                disabled={addingNote}
-                className="form-textarea"
-              />
-              <button
-                type="submit"
-                disabled={addingNote || !noteText.trim()}
-                className="btn-add-note"
-                style={{
-                  cursor: addingNote || !noteText.trim() ? 'not-allowed' : 'pointer',
-                  opacity: addingNote || !noteText.trim() ? 0.6 : 1,
-                }}
-              >
+          <section className="drawer-section">
+            <h3 className="drawer-section-title">Add Follow-Up Note</h3>
+            <form onSubmit={handleAddNote} className="note-input-area">
+              <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Write a follow-up note here..." rows={3} disabled={addingNote} className="input textarea" />
+              <button type="submit" disabled={addingNote || !noteText.trim()} className="btn btn-primary btn-sm" style={{ alignSelf: 'flex-end' }}>
                 {addingNote ? 'Saving...' : 'Add Note'}
               </button>
             </form>
           </section>
 
-          {/* Notes History */}
-          <section style={{ marginBottom: '1.5rem' }}>
-            <h3 className="section-label-sm">
-              Follow-Up History ({notes.length})
-            </h3>
+          <section className="drawer-section">
+            <h3 className="drawer-section-title">Follow-Up History ({notes.length})</h3>
             {notes.length === 0 ? (
-              <p className="note-empty">
-                No notes yet. Add the first follow-up note above.
-              </p>
+              <p className="note-empty">No notes yet. Add the first follow-up note above.</p>
             ) : (
               <div className="notes-list">
                 {[...notes].reverse().map((note, idx) => (
-                  <div key={note._id || idx} className="note-card">
-                    <p className="note-text">
-                      {note.text}
-                    </p>
-                    <p className="note-date">
-                      {formatDate(note.createdAt)}
-                    </p>
+                  <div className="note-card" key={note._id || idx}>
+                    <p className="note-text">{note.text}</p>
+                    <p className="note-date">{formatDate(note.createdAt)}</p>
                   </div>
                 ))}
               </div>
             )}
           </section>
 
-          {/* Delete Lead */}
-          <section>
-            <h3 className="section-label-sm">
-              Danger Zone
-            </h3>
+          <section className="drawer-section">
+            <h3 className="drawer-section-title">Danger Zone</h3>
             {!confirmDelete ? (
-              <button
-                onClick={() => setConfirmDelete(true)}
-                className="btn-delete-lead"
-              >
-                Delete This Lead
-              </button>
+              <button onClick={() => setConfirmDelete(true)} className="btn btn-danger" style={{ width: '100%' }}>Delete This Lead</button>
             ) : (
-              <div className="delete-confirm-box">
-                <p className="delete-confirm-text">
-                  Are you sure? This action cannot be undone.
-                </p>
+              <div className="danger-zone">
+                <p style={{ color: 'var(--red-500)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>Are you sure? This action cannot be undone.</p>
                 <div className="delete-actions">
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="btn-confirm-delete"
-                    style={{
-                      cursor: deleting ? 'not-allowed' : 'pointer',
-                      opacity: deleting ? 0.7 : 1
-                    }}
-                  >
+                  <button onClick={handleDelete} disabled={deleting} className="btn btn-danger" style={{ flex: 1 }}>
                     {deleting ? 'Deleting...' : 'Confirm Delete'}
                   </button>
-                  <button
-                    onClick={() => setConfirmDelete(false)}
-                    disabled={deleting}
-                    className="btn-cancel-delete"
-                  >
-                    Cancel
-                  </button>
+                  <button onClick={() => setConfirmDelete(false)} disabled={deleting} className="btn btn-secondary" style={{ flex: 1 }}>Cancel</button>
                 </div>
               </div>
             )}
@@ -258,19 +146,6 @@ function LeadDetailPanel({ lead, onClose, onUpdate, onDelete }) {
         </div>
       </div>
     </>
-  );
-}
-
-function InfoField({ label, value }) {
-  return (
-    <div>
-      <p className="info-field-label">
-        {label}
-      </p>
-      <p className="info-field-value">
-        {value}
-      </p>
-    </div>
   );
 }
 
