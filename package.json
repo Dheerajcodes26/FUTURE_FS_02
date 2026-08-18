@@ -1,6 +1,7 @@
 {
   "name": "future-fs-02-mini-crm",
   "version": "1.0.0",
+  "type": "module",
   "description": "Client Lead Management System (Mini CRM)",
   "main": "server/server.js",
   "scripts": {
